@@ -54,18 +54,29 @@ RUN mkdir -p ${LOG_DIR}
 RUN touch ${LOG_DIR}/odoo.log
 RUN chown -R ${USER_ODOO}:${USER_ODOO} ${LOG_DIR}
 
-COPY ./odoo${ODOO_VERSION}.conf ${BASE_DIR}/odoo.conf
+COPY ./odoo.conf ${BASE_DIR}/odoo.conf
 RUN chown -R ${USER_ODOO}:${USER_ODOO} ${BASE_DIR}
 
 USER odoo
 
-RUN mkdir ${BASE_DIR}/odoo-custom-addons
-RUN mkdir ${BASE_DIR}/odoo-custom-addons/odoo-brasil
-RUN mkdir ${BASE_DIR}/odoo-custom-addons/tree
+RUN mkdir -p ${BASE_DIR}/odoo-custom-addons
+RUN mkdir -p ${BASE_DIR}/odoo-custom-addons/OCA/crm
+RUN mkdir -p ${BASE_DIR}/odoo-custom-addons/OCA/timesheet
+RUN mkdir -p ${BASE_DIR}/odoo-custom-addons/OCA/project
+RUN mkdir -p ${BASE_DIR}/odoo-custom-addons/OCA/project-reporting
+RUN mkdir -p ${BASE_DIR}/odoo-custom-addons/OCA/sale-workflow
+RUN mkdir -p ${BASE_DIR}/odoo-custom-addons/Trust-Code/trustcode-addons
+RUN mkdir -p ${BASE_DIR}/odoo-custom-addons/Trust-Code/odoo-brasil
 
-RUN git clone https://www.github.com/odoo/odoo --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo
-RUN git clone https://github.com/Trust-Code/odoo-brasil.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo-custom-addons/odoo-brasil
-RUN git clone https://github.com/OCA/crm.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo-custom-addons/tree
+RUN git clone https://github.com/odoo/odoo.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo
+RUN git clone https://github.com/OCA/crm.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo-custom-addons/OCA/crm
+RUN git clone https://github.com/OCA/timesheet.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo-custom-addons/OCA/timesheet
+RUN git clone https://github.com/OCA/project.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo-custom-addons/OCA/project
+RUN git clone https://github.com/OCA/project-reporting.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo-custom-addons/OCA/project-reporting
+RUN git clone https://github.com/OCA/sale-workflow.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo-custom-addons/OCA/sale-workflow
+RUN git clone https://github.com/Trust-Code/trustcode-addons.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo-custom-addons/Trust-Code/trustcode-addons
+RUN git clone https://github.com/Trust-Code/odoo-brasil.git --depth 1 --branch ${ODOO_BRANCH} ${BASE_DIR}/odoo-custom-addons/Trust-Code/odoo-brasil
+
 COPY ./odoo-custom-addons-${ODOO_VERSION}/. ${BASE_DIR}/odoo-custom-addons/
 
 ENV VIRTUAL_ENV=/opt/odoo/venv/bin/
@@ -73,8 +84,11 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN $VIRTUAL_ENV/bin/pip3 install --upgrade pip \
     && $VIRTUAL_ENV/bin/pip3 install --upgrade setuptools wheel psycopg2 PyPDF2 psycopg2-binary \
-    && $VIRTUAL_ENV/bin/pip3 install --upgrade -r ${BASE_DIR}/odoo-custom-addons/odoo-brasil/requirements.txt \
-    && $VIRTUAL_ENV/bin/pip3 install --upgrade -r ${BASE_DIR}/odoo/requirements.txt
+    && $VIRTUAL_ENV/bin/pip3 install --upgrade -r ${BASE_DIR}/odoo-custom-addons/Trust-Code/odoo-brasil/requirements.txt \
+    && $VIRTUAL_ENV/bin/pip3 install --upgrade -r ${BASE_DIR}/odoo/requirements.txt \
+    && $VIRTUAL_ENV/bin/pip3 install --upgrade -r ${BASE_DIR}/odoo-custom-addons/Trust-Code/trustcode-addons\requirements.txt \
+    && $VIRTUAL_ENV/bin/pip3 install --upgrade -r ${BASE_DIR}/odoo-custom-addons/OCA/sale-workflow\requirements.txt 
+
 CMD ["python3","/opt/odoo/odoo/odoo-bin","-c","/opt/odoo/odoo.conf"]
 
 EXPOSE 8069
